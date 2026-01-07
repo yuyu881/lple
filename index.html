@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>學習歷程排版編輯器</title>
+    <meta name="description" content="將 AI 對話轉換為專業的學習歷程檔案">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Markdown & LaTeX Support -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- GUIDE VIEW (Landing Page) -->
+        <div id="guide-view" class="view-container">
+            <header class="guide-header">
+                <div class="logo large">
+                    <span class="logo-icon">📚</span>
+                    學習歷程排版編輯器
+                </div>
+                <p class="guide-subtitle">專為工程類學生設計，將 AI 對話一鍵轉為專業報告</p>
+            </header>
+
+            <main class="guide-content">
+                <div class="steps-grid">
+                    <!-- Step 1 -->
+                    <div class="step-card" onclick="openModal('modal-step1')">
+                        <div class="step-icon">🤖</div>
+                        <h3>步驟 1：AI 對話</h3>
+                        <p>與 Gemini / ChatGPT 進行專題討論</p>
+                        <span class="step-action">點擊查看教學</span>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="step-card highlight-pulse" onclick="openModal('modal-prompt')">
+                        <div class="step-icon">📋</div>
+                        <h3>步驟 2：取得提示詞</h3>
+                        <p>複製專用提示詞，讓 AI 幫你整理重點</p>
+                        <p class="highlight-text">⚠️ 記得開啟 Canvas 模式</p>
+                        <span class="step-action">點擊複製提示詞</span>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="step-card" onclick="openModal('modal-step3')">
+                        <div class="step-icon">💾</div>
+                        <h3>步驟 3：儲存內容</h3>
+                        <p>將 AI 的完整回應存成的 .txt 或 .md 檔</p>
+                        <span class="step-action">點擊查看格式</span>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="step-card highlight-card" id="startSystemBtn">
+                        <div class="step-icon">🚀</div>
+                        <h3>步驟 4：啟動系統</h3>
+                        <p>進入排版編輯器，匯入檔案並輸出 PDF</p>
+                        <span class="step-action">立即開始使用</span>
+                    </div>
+                </div>
+            </main>
+
+            <footer class="guide-footer">
+                <p>© 2026 學習歷程排版編輯器 v1.0 | 作者：yucs & Gemini | 最後編修：2026-01-05</p>
+            </footer>
+        </div>
+
+        <!-- EDITOR VIEW (Original Content) -->
+        <div id="editor-view" class="view-container hidden-view">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-content">
+                    <h1 class="logo">
+                        <span class="logo-icon">📚</span>
+                        學習歷程排版編輯器
+                    </h1>
+                    <p class="tagline">將 AI 對話轉換並排版為專業的學習歷程文件</p>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Left Panel - Input -->
+                <section class="panel input-panel">
+                    <div class="panel-header">
+                        <h2>📝 對話內容輸入</h2>
+                        <span class="panel-hint">貼上或上傳與 AI 的對話紀錄</span>
+                    </div>
+
+                    <div class="input-area">
+                        <!-- Basic Info Inputs -->
+                        <div class="basic-info-group">
+                            <label>基本資料</label>
+                            <input type="text" id="schoolName" class="basic-input" placeholder="學校名稱">
+                            <div class="input-row">
+                                <input type="text" id="studentClass" class="basic-input" placeholder="班級/座號">
+                                <input type="text" id="studentName" class="basic-input" placeholder="學生姓名">
+                            </div>
+                            <input type="text" id="advisorName" class="basic-input" placeholder="指導老師">
+                        </div>
+
+                        <!-- File Upload Zone - Entire zone is clickable via JS handler -->
+                        <div class="upload-zone" id="uploadZone">
+                            <div class="upload-icon">📁</div>
+                            <p>拖放 .txt 或 .md 檔案到此處</p>
+                            <span class="upload-or">或</span>
+                            <span class="upload-btn">點擊任意處選擇檔案</span>
+                            <input type="file" id="fileInput" accept=".txt,.md" hidden>
+                        </div>
+
+                        <!-- Text Input -->
+                        <div class="text-input-wrapper">
+                            <textarea id="dialogueInput" placeholder="或直接在此貼上對話內容...
+
+範例格式：
+問：Arduino LED 閃爍太快怎麼調整？
+答：你可以調整 delay() 函數的參數..."></textarea>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+
+                            <button class="btn btn-secondary" id="clearBtn">
+                                <span class="btn-icon">🗑️</span>
+                                清除
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel output-panel">
+                    <div class="panel-header">
+                        <h2>📄 學習歷程預覽</h2>
+                        <button class="btn btn-print" id="previewReportBtn">
+                            <span class="btn-icon">👁️</span>
+                            預覽報告模式
+                        </button>
+                    </div>
+
+                    <div class="output-area" id="outputArea">
+                        <!-- Empty State -->
+                        <div class="empty-state" id="emptyState">
+                            <div class="empty-icon">✨</div>
+                            <p>請上傳 .md 檔案進行匯入</p>
+                            <p class="empty-hint">或直接編輯下方內容</p>
+                        </div>
+
+                        <!-- Image Requirements Checklist -->
+                        <div class="image-checklist" id="imageChecklist" style="display: none;">
+                            <h3 class="checklist-title">📸 圖片待辦清單</h3>
+                            <p class="checklist-hint">系統偵測到以下章節需要圖片，請準備好後上傳至對應區塊：</p>
+                            <div class="checklist-items" id="checklistItems">
+                                <!-- Items will be injected here -->
+                            </div>
+                        </div>
+
+                        <!-- Generated Content (hidden initially) -->
+                        <div class="portfolio-content" id="portfolioContent" style="display: none;">
+                            <!-- Title -->
+                            <div class="portfolio-section title-section">
+                                <input type="text" class="editable-title" id="portfolioTitle" placeholder="研究題目">
+                            </div>
+
+                            <!-- 前言 -->
+                            <div class="portfolio-section">
+                                <h3 class="section-title">前言</h3>
+                                <div class="section-hint">100字內，重點描述研究動機、過程、結果與省思</div>
+                                <textarea class="section-content" id="sectionIntro"
+                                    placeholder="系統將自動生成前言內容..."></textarea>
+                            </div>
+
+                            <!-- 第一章：研究動機 -->
+                            <div class="portfolio-section">
+                                <h3 class="section-title">第一章：研究動機</h3>
+                                <div class="section-hint">200字內，描述為什麼要研究這個主題</div>
+                                <textarea class="section-content" id="sectionMotivation"
+                                    placeholder="系統將自動生成研究動機..."></textarea>
+                            </div>
+
+                            <!-- 第二章：研究相關知識 -->
+                            <div class="portfolio-section">
+                                <h3 class="section-title">第二章：研究相關知識</h3>
+                                <div class="section-hint">不限字數，主要設備/元件的相關知識</div>
+                                <textarea class="section-content section-content-large" id="sectionKnowledge"
+                                    placeholder="系統將自動生成相關知識..."></textarea>
+                                <div class="image-upload-area" data-section="knowledge">
+                                    <label class="image-upload-btn">
+                                        <span>📷 新增圖片</span>
+                                        <input type="file" accept="image/*" multiple hidden>
+                                    </label>
+                                    <div class="image-preview"></div>
+                                </div>
+                            </div>
+
+                            <!-- 第三章：研究方法與使用設備 -->
+                            <div class="portfolio-section">
+                                <h3 class="section-title">第三章：研究方法與使用設備</h3>
+                                <div class="section-hint">不限字數，研究方式及使用的設備與材料</div>
+                                <textarea class="section-content section-content-large" id="sectionMethod"
+                                    placeholder="系統將自動生成研究方法..."></textarea>
+                                <div class="image-upload-area" data-section="method">
+                                    <label class="image-upload-btn">
+                                        <span>📷 新增圖片</span>
+                                        <input type="file" accept="image/*" multiple hidden>
+                                    </label>
+                                    <div class="image-preview"></div>
+                                </div>
+                            </div>
+
+                            <!-- 第四章：研究結果 -->
+                            <div class="portfolio-section">
+                                <h3 class="section-title">第四章：研究結果</h3>
+                                <div class="section-hint">100~200字，描述研究結果與發現</div>
+                                <textarea class="section-content" id="sectionResult"
+                                    placeholder="系統將自動生成研究結果..."></textarea>
+                                <div class="image-upload-area" data-section="result">
+                                    <label class="image-upload-btn">
+                                        <span>📷 新增圖片</span>
+                                        <input type="file" accept="image/*" multiple hidden>
+                                    </label>
+                                    <div class="image-preview"></div>
+                                </div>
+                            </div>
+
+                            <!-- 第五章：研究省思與建議 -->
+                            <div class="portfolio-section">
+                                <h3 class="section-title">第五章：研究省思與建議</h3>
+                                <div class="section-hint">200字內，操作心得、學習發現、學習心得</div>
+                                <textarea class="section-content" id="sectionReflection"
+                                    placeholder="系統將自動生成省思與建議..."></textarea>
+                                <div class="image-upload-area" data-section="reflection">
+                                    <label class="image-upload-btn">
+                                        <span>📷 新增圖片</span>
+                                        <input type="file" accept="image/*" multiple hidden>
+                                    </label>
+                                    <div class="image-preview"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <p>學習歷程排版編輯器 v1.0 | 作者：yucs & Gemini | 最後編修：2026-01-05</p>
+                <button id="backToGuideBtn" class="btn-text">🏠 回到首頁</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- Step 1 Modal -->
+    <div id="modal-step1" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>步驟 1：AI 對話與探究</h3>
+                <button class="modal-close" onclick="closeModal('modal-step1')">×</button>
+            </div>
+            <div class="modal-body">
+                <p>請選擇您習慣使用的 AI 助理，並開始進行專題對話。</p>
+                <ul>
+                    <li>建議使用 <strong>ChatGPT (GPT-4)</strong> 或 <strong>Gemini Advanced</strong> 以獲得最佳效果。</li>
+                    <li>如果是實作問題，請準備好相關的程式碼或電路圖。</li>
+                </ul>
+                <div class="modal-actions" style="justify-content: center; gap: 2rem;">
+                    <a href="https://chatgpt.com/" target="_blank" class="btn btn-primary"
+                        style="text-decoration: none;">
+                        前往 ChatGPT ↗
+                    </a>
+                    <a href="https://gemini.google.com/" target="_blank" class="btn btn-primary"
+                        style="text-decoration: none;">
+                        前往 Gemini ↗
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prompt Modal -->
+    <div id="modal-prompt" class="modal hidden">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3>步驟 2：取得專用提示詞</h3>
+                <button class="modal-close" onclick="closeModal('modal-prompt')">×</button>
+            </div>
+            <div class="modal-body">
+                <p>請複製以下提示詞，並貼給 AI 助理：</p>
+                <div class="prompt-box">
+                    <pre id="promptText">載入中...</pre>
+                    <button class="btn btn-secondary btn-copy" id="copyPromptBtn">
+                        <span class="btn-icon">📋</span> 複製提示詞
+                    </button>
+                    <div id="copySuccess" class="copy-success hidden">已複製！</div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" onclick="closeModal('modal-prompt')">完成</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3 Modal -->
+    <div id="modal-step3" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>步驟 3：儲存內容</h3>
+                <button class="modal-close" onclick="closeModal('modal-step3')">×</button>
+            </div>
+            <div class="modal-body">
+                <p>將 AI 的完整回應（包含 Markdown 格式）儲存下來：</p>
+                <ol>
+                    <li>點擊 AI 回覆下方的「複製」按鈕</li>
+                    <li>將內容貼到記事本或 VS Code</li>
+                    <li>另存新檔為 <code>report.md</code> 或 <code>report.txt</code></li>
+                </ol>
+                <p>或者，您也可以直接在下一步驟將內容貼入本系統。</p>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" onclick="closeModal('modal-step3')">我知道了</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal (for iframe environments where native confirm is blocked) -->
+    <div id="modal-import-confirm" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📥 偵測到檔案內容</h3>
+                <button class="modal-close" onclick="closeImportModal(false)">×</button>
+            </div>
+            <div class="modal-body">
+                <p id="importConfirmMessage">偵測到這似乎是一份「學習歷程報告」Markdown 檔。是否要直接匯入到右側編輯區？</p>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeImportModal(false)">取消</button>
+                    <button class="btn btn-primary" onclick="closeImportModal(true)">確定匯入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Independent Report Preview Container -->
+    <div id="reportPreview" class="report-preview hidden">
+        <div class="preview-toolbar">
+            <button id="backToEditBtn" class="btn btn-secondary">
+                <span class="btn-icon">✏️</span> 返回編輯
+            </button>
+            <div class="preview-info">
+                預覽模式 (即使顯示不如預期，列印結果通常是正確的)
+            </div>
+            <button onclick="safePrint()" class="btn btn-primary">
+                <span class="btn-icon">🖨️</span> 列印 / 存為 PDF
+            </button>
+        </div>
+        <div id="reportContent" class="report-content">
+            <!-- Content will be generated by JS -->
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+
+</html>
