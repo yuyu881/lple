@@ -1151,8 +1151,8 @@ function extractImageRequirements(content, parsed) {
 
         sections.forEach(sec => {
             // 尋找 （此處可插入...圖片...） 的模式
-            // 以全形括號「（ ）」為邊界，允許內容包含半形括號如 (603)
-            const placeholderRegex = /（[^）]*圖[^）]*）/g;
+            // 以全形括號「（ ）」為邊界，允許內容包含半形括號如 (603)，且支援結尾多個右括號
+            const placeholderRegex = /（[^）]*圖[^）]*）+/g;
             const matches = sec.content.match(placeholderRegex);
             if (matches) {
                 matches.forEach(m => {
@@ -1373,8 +1373,12 @@ function renderReportContent() {
             // 2. 以全形括號「（ ）」為邊界，而非半形括號（因為內容可能包含 (603) 等半形括號）
             // 3. 內容必須包含「此處」和「圖」關鍵字
             // 4. 使用 [^）]* 只排除全形右括號，允許半形括號存在於內容中
-            const placeholderRegex = /(?:\*{1,2}|_{1,2})?\s*（[^）]*此處[^）]*圖[^）]*）\s*(?:\*{1,2}|_{1,2})?/g;
+            // 5. 支援結尾連續多個全形右括號（如 error case）
+            const placeholderRegex = /(?:\*{1,2}|_{1,2})?\s*（[^）]*此處[^）]*圖[^）]*）+\s*(?:\*{1,2}|_{1,2})?/g;
             let imageIndex = 0;
+
+            // [新增] 移除「圖片準備清單」及其後的內容，避免出現在正式報告中
+            processedContent = processedContent.replace(/(?:##|###)?\s*(?:\*\*|__)?【圖片準備清單】(?:\*\*|__)?[\s\S]*?$/g, '');
 
             processedContent = processedContent.replace(placeholderRegex, (match) => {
                 if (imageIndex < sectionImages.length) {
