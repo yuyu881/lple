@@ -1,6 +1,11 @@
 /**
- * 學習歷程排版編輯器 MVP
- * 核心邏輯：對話解析與學習歷程生成
+ * 程式功能簡介：學習歷程排版編輯器核心邏輯 (MVP)
+ * 程式歷次修改簡說：
+ *  - 2026-01-05 v1.0 初始版本
+ *  - 2026-01-12 v1.1 移除 HEIC 前端轉檔，改為提示使用者手動轉檔
+ * 使用的Pin腳/IO：無
+ * 建立者：yucs & Gemini
+ * 最後一次修改日期：2026-01-12
  */
 
 // ===== DOM Elements =====
@@ -308,7 +313,8 @@ uploadAreas.forEach(area => {
         area.classList.remove('dragover');
         const files = e.dataTransfer.files;
         for (let file of files) {
-            if (file.type.startsWith('image/')) {
+            // Allow images and HEIC files specifically
+            if (file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.heic')) {
                 addImagePreview(file, preview);
             }
         }
@@ -1078,9 +1084,23 @@ function resetOutput() {
 }
 
 /**
- * 新增圖片預覽 (支援圖片說明)
+ * 新增圖片預覽 (支援圖片說明 + HEIC 自動轉檔)
  */
-function addImagePreview(file, previewContainer) {
+async function addImagePreview(file, previewContainer) {
+    let processFile = file;
+
+    // 檢查並轉換 HEIC
+    if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
+        // [Phase 6] 策略轉向：不再嘗試前端轉檔，直接提示使用者
+        alert('系統偵測到您上傳了 HEIC 格式圖片。\n\n由於瀏覽器相容性限制，請先將圖片轉存為 JPG 或 PNG 格式後再上傳，以確保最佳顯示效果。');
+
+        // 移除載入中提示
+        if (loadingDiv && loadingDiv.parentNode) {
+            loadingDiv.parentNode.removeChild(loadingDiv);
+        }
+        return; // 停止處理
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
         const div = document.createElement('div');
@@ -1097,7 +1117,7 @@ function addImagePreview(file, previewContainer) {
 
         previewContainer.appendChild(div);
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(processFile);
 }
 
 /**
@@ -1512,12 +1532,24 @@ function generateSmartUploadUI(requirements) {
 /**
  * 處理 Smart Slot 圖片上傳
  */
-function handleSmartUpload(input) {
+/**
+ * 處理 Smart Slot 圖片上傳 (支援 HEIC 自動轉檔)
+ */
+async function handleSmartUpload(input) {
     if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const reader = new FileReader();
+        let file = input.files[0];
         const slot = input.closest('.smart-slot');
         const preview = slot.querySelector('.smart-slot-preview');
+
+        // 檢查並轉換 HEIC
+        if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
+            // [Phase 6] 策略轉向：不再嘗試前端轉檔，直接提示使用者
+            alert('系統偵測到您上傳了 HEIC 格式圖片 (Smart Slot)。\n\n由於瀏覽器相容性限制，請先將圖片轉存為 JPG 或 PNG 格式後再上傳。');
+            preview.innerHTML = '<div class="smart-slot-placeholder"><span>格式不支援</span></div>';
+            return; // 停止處理
+        }
+
+        const reader = new FileReader();
 
         reader.onload = function (e) {
             preview.innerHTML = `<img src="${e.target.result}">`;
