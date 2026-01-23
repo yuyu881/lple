@@ -1,4 +1,12 @@
-﻿/* ===== CSS Variables Removed for Iframe Compatibility ===== */
+﻿/*
+ 程式功能簡介：學習歷程排版編輯器樣式表
+ 程式歷次修改簡說：
+  - 2026-01-22 v1.0 新增強制段落縮排規則
+ 使用的Pin腳/IO：無
+ 建立者：yucs & Gemini
+ 最後一次修改日期：2026-01-22
+*/
+/* ===== CSS Variables Removed for Iframe Compatibility ===== */
 
 /* ===== Reset & Base ===== */
 *,
@@ -610,8 +618,8 @@ body {
 .cover-school {
     font-size: 26pt;
     font-weight: bold;
-    margin-top: 8.5cm;
-    /* Starts from 8th line down (approx 7 empty lines) */
+    margin-top: 5cm;
+    /* Reduced from 8.5cm to prevent overflow */
     margin-bottom: 1rem;
     line-height: 1.4;
     text-align: center;
@@ -672,6 +680,12 @@ body {
 }
 
 /* Markdown Styles */
+.markdown-content p {
+    text-indent: 2em;
+    margin-bottom: 1rem;
+}
+
+
 .markdown-content ul,
 .markdown-content ol {
     padding-left: 2rem;
@@ -759,6 +773,12 @@ body {
 
 /* ===== Print Styles ===== */
 
+/* Define print page settings to remove default browser margins */
+@page {
+    size: A4;
+    margin: 0;
+}
+
 @media print {
 
     /* Hide all immediate children of body by default */
@@ -803,17 +823,54 @@ body {
         margin: 0 auto !important;
         box-shadow: none !important;
         width: 100% !important;
-        padding: 0 !important;
+        padding: 2.5cm !important;
+        /* Restore padding for content pages */
         min-height: auto !important;
-        page-break-after: always;
+        /* REMOVED: page-break-after: always - was causing blank pages */
         border: none !important;
         /* Ensure font settings in print */
         font-family: 'KaiTi', 'BiauKai', 'DFKai-SB', serif !important;
+        height: auto !important;
+    }
+
+    /* Specific fix for cover page in print */
+    .cover-page {
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+        padding: 1.5cm !important;
+        /* Reduced padding */
+        margin: 0 !important;
+        /* REMOVED page-break-after: always - was causing blank page */
+        display: block !important;
+        /* Simple block layout instead of flexbox */
+        text-align: center !important;
+        overflow: visible !important;
     }
 
     /* Ensure the last page doesn't have an extra blank page if possible */
     .report-page:last-child {
         page-break-after: auto;
+    }
+
+    /* Reduce margins for cover page elements in print to prevent spillover */
+    .cover-page .cover-school {
+        margin-top: 0 !important;
+        margin-bottom: 0.5rem !important;
+        font-size: 20pt !important;
+        /* Reduced from 26pt */
+    }
+
+    .cover-page .cover-title {
+        margin-bottom: 0.5cm !important;
+        font-size: 20pt !important;
+        /* Reduced from 26pt */
+    }
+
+    .cover-page .cover-info {
+        font-size: 14pt !important;
+        /* Reduced from 20pt */
+        line-height: 1.5 !important;
     }
 
     /* Ensure images are centered and don't break across pages awkwardly */

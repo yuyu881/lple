@@ -3,9 +3,10 @@
  * 程式歷次修改簡說：
  *  - 2026-01-05 v1.0 初始版本
  *  - 2026-01-12 v1.1 移除 HEIC 前端轉檔，改為提示使用者手動轉檔
+ *  - 2026-01-22 v1.2 強化段落首行縮排 (2em)
  * 使用的Pin腳/IO：無
  * 建立者：yucs & Gemini
- * 最後一次修改日期：2026-01-12
+ * 最後一次修改日期：2026-01-22
  */
 
 // ===== DOM Elements =====
@@ -73,6 +74,9 @@ const LEARNING_PORTFOLIO_PROMPT = `你是一個專業的工程學習歷程檔案
 
 ---
 
+### (可選) 使用者補充指令
+(在此處填寫您的額外要求，例如：希望強調綠色能源應用、語氣要活潑一點...等)
+
 【撰寫要求】
 1.  **語氣**：使用繁體中文，第一人稱「我」。
 2.  **通用性**：請根據對話內容自動判斷是電子電路、程式設計、機械結構或其他工程領域，使用該領域的專業術語。
@@ -84,7 +88,10 @@ const LEARNING_PORTFOLIO_PROMPT = `你是一個專業的工程學習歷程檔案
     - 禁止使用粗體符號包裹（不可寫成 \`**（...）**\`）
     - 必須包含「此處」和「圖」關鍵字
     - 正確格式範例：\`（此處可插入相關圖片：MOSFET 結構比較圖）\`
-7.  **提供下載檔案**：若您具有檔案生成能力，請提供「可直接點擊下載」的 .md 檔案連結。若無法提供真實下載連結，請將完整內容輸出於一個 Markdown 程式碼區塊中，以便我複製。`;
+7.  **提供下載檔案**：若您具有檔案生成能力，請提供「可直接點擊下載」的 .md 檔案連結。若無法提供真實下載連結，請將完整內容輸出於一個 Markdown 程式碼區塊中，以便我複製。
+8.  **段落分段規範**：
+    - 請**嚴格使用「雙空行」**來分隔段落。
+    - **禁止使用「軟換行」**（即行尾兩格空白），因為這會導致 Word 或 PDF 排版時縮排格式錯誤。`;
 
 // Landing Page Functions (Global scope for onclick attributes)
 window.openModal = function (modalId) {
@@ -387,16 +394,17 @@ function openPrintWindow() {
     // Build HTML with clean print-ready styles (including cover page styles)
     const printStyles = `
         /* Base Styles */
-        body { background: white !important; margin: 0; padding: 20px; }
+        /* Base Styles */
+        body { background: white !important; margin: 0 !important; padding: 0 !important; }
         .preview-toolbar { display: none !important; }
         
         /* Report Page Base */
         .report-page {
-            width: 210mm;
+            width: 100% !important; /* Changed from 210mm to avoid horizontal overflow */
             min-height: 297mm;
             background: white !important;
             color: black !important;
-            margin: 0 auto 2cm auto;
+            margin: 0 !important; /* Remove margins */
             padding: 2.5cm;
             box-shadow: none !important;
             font-family: 'KaiTi', 'BiauKai', 'DFKai-SB', '標楷體', serif !important;
@@ -408,31 +416,32 @@ function openPrintWindow() {
         
         /* Cover Page - 封面頁樣式 */
         .cover-page {
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: flex-start !important;
-            align-items: center !important;
+            display: block !important;
             text-align: center !important;
-            height: 297mm;
-            padding-top: 0 !important;
+            height: 296mm !important; /* Strict fixed height to preventing blank page */
+            min-height: 296mm !important;
+            overflow: hidden !important; /* Clip content to prevent spillover */
+            padding: 0.5cm !important;
+            page-break-after: always;
+            margin: 0 !important;
         }
         
-        /* 學校名稱 - 26pt 粗體 置中 標楷體 */
+        /* 學校名稱 - 22pt 粗體 置中 標楷體 */
         .cover-school {
-            font-size: 26pt !important;
+            font-size: 22pt !important;
             font-weight: bold !important;
-            margin-top: 8.5cm !important;
-            margin-bottom: 1rem !important;
+            margin-top: 5.5cm !important; /* Keep current position */
+            margin-bottom: 0.5rem !important;
             line-height: 1.4 !important;
             text-align: center !important;
             font-family: 'KaiTi', 'BiauKai', 'DFKai-SB', '標楷體', serif !important;
         }
         
-        /* 報告名稱 - 26pt 粗體 置中 標楷體 */
+        /* 報告名稱 - 22pt 粗體 置中 標楷體 */
         .cover-title {
-            font-size: 26pt !important;
+            font-size: 22pt !important;
             font-weight: bold !important;
-            margin-bottom: 6cm !important;
+            margin-bottom: 5.5cm !important; /* Increased to move student info down 10 lines */
             line-height: 1.4 !important;
             text-align: center !important;
             font-family: 'KaiTi', 'BiauKai', 'DFKai-SB', '標楷體', serif !important;
@@ -443,7 +452,8 @@ function openPrintWindow() {
             font-size: 20pt !important;
             line-height: 2 !important;
             text-align: left !important;
-            margin-right: 15% !important;
+            margin-left: 28% !important; /* Reduced from 35% - move left 3 chars */
+            margin-right: 0 !important;
             font-family: 'KaiTi', 'BiauKai', 'DFKai-SB', '標楷體', serif !important;
         }
         .cover-info p {
@@ -1135,7 +1145,25 @@ function cleanMarkdown(content) {
         .replace(/^\\# /gm, '# ')
         .replace(/^\\## /gm, '## ')
         // Remove bold markers around images **![alt](url)** -> ![alt](url)
-        .replace(/\*\*\s*(!\[.*?\]\(.*?\))\s*\*\*/g, '$1');
+        .replace(/\*\*\s*(!\[.*?\]\(.*?\))\s*\*\*/g, '$1')
+        // [Fix] Convert Soft Breaks (two spaces at end of line) to Paragraph Breaks (double newline)
+        // This ensures text-indent works correctly for all paragraphs
+        .replace(/  \n/g, '\n\n')
+        .replace(/  \r\n/g, '\n\n');
+}
+
+/**
+ * Helper: Map Section Name to Key (Strict Matching)
+ */
+function mapSectionToKey(sectionName) {
+    if (!sectionName) return '';
+    // Use strict regex to avoid matching "案例二" as "Chapter 2"
+    // Matches "第x章" or just "x章" where x is 2,3,4,5 or Chinese numerals
+    if (/(?:第|^)\s*[二2]\s*章/.test(sectionName)) return 'knowledge';
+    if (/(?:第|^)\s*[三3]\s*章/.test(sectionName)) return 'method';
+    if (/(?:第|^)\s*[四4]\s*章/.test(sectionName)) return 'result';
+    if (/(?:第|^)\s*[五5]\s*章/.test(sectionName)) return 'reflection';
+    return '';
 }
 
 /**
@@ -1145,16 +1173,49 @@ function extractImageRequirements(content, parsed) {
     const requirements = [];
 
     // 1. 嘗試解析「圖片準備清單」區塊 (特定格式)
-    const checklistRegex = /【圖片準備清單】([\s\S]*?)(?=---|$)/;
+    const checklistRegex = /(?:【圖片準備清單】)([\s\S]*?)(?=---|$)/;
     const match = content.match(checklistRegex);
     if (match) {
         const listText = match[1];
-        const itemRegex = /\d+\.\s+\[?(.*?)\]?：(.*?)(?:\n|$)/g;
-        let itemMatch;
-        while ((itemMatch = itemRegex.exec(listText)) !== null) {
-            requirements.push({
-                section: itemMatch[1].trim(),
-                desc: itemMatch[2].trim()
+        // Capture each numbered item block (e.g. "1. **Chapter**: ...")
+        // Look ahead for the next number at start of line or end of string
+        const itemBlocks = listText.match(/^\d+\.[\s\S]*?(?=(?:^\d+\.)|$)/gm);
+
+        if (itemBlocks) {
+            itemBlocks.forEach(block => {
+                // Extract section name: matches "1. **Chapter**：" or "1. Chapter："
+                // We use a regex to capture text between "1." and "："
+                const sectionMatch = block.match(/^\d+\.\s*(?:(?:\*\*|__)?(.*?)(?:\*\*|__)?)(?:：|:)/);
+
+                if (sectionMatch) {
+                    const sectionName = sectionMatch[1].trim();
+
+                    // Look for bullet points (image descriptions)
+                    const bullets = block.match(/(?:^|\n)\s*[\*\-]\s*(?:(?:\*\*|__)?說明(?:\*\*|__)?(?:：|:))?\s*(.*?)(?=(?:\n\s*[\*\-]|$|\n\d+\.))/g);
+
+                    if (bullets && bullets.length > 0) {
+                        bullets.forEach(b => {
+                            // Clean up bullet syntax to get description
+                            const desc = b.replace(/(?:^|\n)\s*[\*\-]\s*(?:(?:\*\*|__)?說明(?:\*\*|__)?(?:：|:))?\s*/, '').trim();
+                            if (desc) {
+                                requirements.push({
+                                    section: sectionName,
+                                    desc: desc
+                                });
+                            }
+                        });
+                    } else {
+                        // Fallback: if no bullet points, try to get description from the main line
+                        // e.g. "1. **Chapter**: Description here"
+                        const mainDescMatch = block.match(/(?:：|:)\s*(.*?)(?:\n|$)/);
+                        if (mainDescMatch && mainDescMatch[1].trim()) {
+                            requirements.push({
+                                section: sectionName,
+                                desc: mainDescMatch[1].trim()
+                            });
+                        }
+                    }
+                }
             });
         }
     }
@@ -1211,10 +1272,7 @@ function renderImageChecklist(requirements) {
         item.className = 'checklist-item';
 
         let sectionKey = '';
-        if (req.section.includes('二')) sectionKey = 'knowledge';
-        else if (req.section.includes('三')) sectionKey = 'method';
-        else if (req.section.includes('四')) sectionKey = 'result';
-        else if (req.section.includes('五')) sectionKey = 'reflection';
+        if (req.section) sectionKey = mapSectionToKey(req.section);
 
         // Add hint to specific upload area
         if (sectionKey) {
@@ -1478,11 +1536,7 @@ function generateSmartUploadUI(requirements) {
     // Group requirements by section
     const sectionReqs = {};
     requirements.forEach(req => {
-        let sectionKey = '';
-        if (req.section.includes('二')) sectionKey = 'knowledge';
-        else if (req.section.includes('三')) sectionKey = 'method';
-        else if (req.section.includes('四')) sectionKey = 'result';
-        else if (req.section.includes('五')) sectionKey = 'reflection';
+        if (req.section) sectionKey = mapSectionToKey(req.section);
 
         if (sectionKey) {
             if (!sectionReqs[sectionKey]) sectionReqs[sectionKey] = [];
